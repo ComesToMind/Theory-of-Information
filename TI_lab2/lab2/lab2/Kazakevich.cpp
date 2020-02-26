@@ -54,31 +54,33 @@ Kaz::output Kaz::Run(vector<char> const &alphabet, vector<double> const &probs)
 	//в этом массиве хранятся коды, но буквы без изменений "а" "б"
 	vector<Container> cods = cnt;
 	//массив тестовый, не будет работать без выхода за пределы
-	for (int i = 0; i < cnt.size(); i++)
+	//while(abs(cnt[0].probability+cnt[1].probability-1) < numeric_limits<double>::epsilon())
+
+	//Сделать обработку на один символ 
+	while(cnt.size()!=1)
 	{
 		for (int j = 0; j < cods.size(); j++)
 		{
 			//элемент слева в массиве, дабавляем кодовый 0 
-			if (count(cnt[i].smb.begin(), cnt[i].smb.end(), cods[j].smb))
+			if (count(cnt[0].smb.begin(), cnt[0].smb.end(), cods[j].smb[0]))
 			{
 				cods[j].code = "0" + cods[j].code;
 			}
 			//элемент справа в массиве, дабавляем кодовый 1 
 			//возможен выход за пределы массива
-			if (count(cnt[i + 1].smb.begin(), cnt[i].smb.end(), cods[j].smb))
+			if (count(cnt[1].smb.begin(), cnt[1].smb.end(), cods[j].smb[0]))
 			{
 				cods[j].code = "1" + cods[j].code;
 			}
 		}
 		//складываем наименьшие вероятности
-		cnt[i].probability += cnt[i+1].probability;
+		cnt[0].probability += cnt[1].probability;
 		//склеиваем их буквы
-		cnt[i].smb += cnt[i + 1].smb;
+		cnt[0].smb += cnt[1].smb;
 		//удаляем элемент 
 		cnt.erase(cnt.begin() + 1);
 		//опять сортируем 
 		sort(cnt.begin(), cnt.end(), compare);
-
 	}
 	return out;
 	
