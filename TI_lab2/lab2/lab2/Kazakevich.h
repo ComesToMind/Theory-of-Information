@@ -16,6 +16,6 @@ namespace Kaz
 		vector<string> Codes;
 		double Average = 0.0;
 	};
-	output Run(vector<char> const &alphabet, vector<double> const &probs);
+	output Run(vector<char> const &alphabet, vector<double> const &probs, int const &arn);
 	void Read_File(vector<char> &alphabet, vector<double> &probs, ifstream &fin);
 }
