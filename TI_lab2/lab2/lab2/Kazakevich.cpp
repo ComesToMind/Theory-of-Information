@@ -80,7 +80,7 @@ Kaz::output Kaz::Run(vector<char> const &alphabet, vector<double> const &probs, 
 	}
 	sort(cnt.begin(), cnt.end(), compare);
 	//в этом массиве хранятся коды, но буквы без изменений "а" "б"
-	vector<Container> cods = cnt;
+	auto cods = cnt;
 	//массив тестовый, не будет работать без выхода за пределы
 
 	//если сделать 1 символ 
@@ -91,6 +91,23 @@ Kaz::output Kaz::Run(vector<char> const &alphabet, vector<double> const &probs, 
 
 	//а теперь реализовать код до 10 арностей 
 	
+
+	//считаем количество дополнительных элементов 
+	int k = 0, additional = 0;
+	while (cnt.size() > arn + k * (arn - 1))
+	{
+		additional = cnt.size() - arn - k * (arn - 1);
+		k++;
+
+	}
+	for (int i = 0; i < additional; i++)
+	{
+		Container addCont;
+		addCont.probability = 0.0;
+		addCont.smb = toString(i);
+		cnt.push_back(addCont);
+	}
+
 	while(cnt.size()!=1)
 	{
 		for (int j = 0; j < cods.size(); j++)

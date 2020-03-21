@@ -3,7 +3,7 @@
 #include <string>
 using namespace std;
 using namespace Kaz;
-#define ARITY 4
+#define ARITY 3
 
 
 int main(int argc, char* argv[])
