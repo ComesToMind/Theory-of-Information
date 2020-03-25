@@ -6,16 +6,13 @@
 #include <iostream>
 #include <algorithm>
 #include <numeric>
+#include <string>
 using namespace std;
 
 namespace Kaz
 {
-	struct output
-	{
-		
-		double Code = 0.0;
-	};
-	output Run(vector<char> const &alphabet, vector<double> const &probs, int const &arn);
+	
+	void Run(vector<char> text, string filename);
 
 }
 
