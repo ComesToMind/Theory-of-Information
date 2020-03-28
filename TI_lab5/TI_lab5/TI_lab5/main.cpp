@@ -25,13 +25,14 @@ int main()
 	//read data from file 
 	vector<char> first_data;
 	char smb;
-	while (fin.peek()!=EOF)
+	while (fin.peek() != EOF)
 	{
 		smb = fin.get();
 		first_data.push_back(smb);
 	}
-	Kaz::Run(first_data,"Kazakevich_output.txt");
-	
 
+	Kaz::Run(first_data, "Kazakevich_output.txt");
+
+	system("pause");
 	return 0;
 }
