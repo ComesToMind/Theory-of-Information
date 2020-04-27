@@ -31,7 +31,7 @@
     <Text Include="input.txt">
       <Filter>Файлы ресурсов</Filter>
     </Text>
-    <Text Include="Kazakevich_output.txt">
+    <Text Include="output.txt">
       <Filter>Файлы ресурсов</Filter>
     </Text>
   </ItemGroup>

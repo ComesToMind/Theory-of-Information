@@ -1,13 +1,13 @@
-#include "Kazakevich.h"
 #include <string>
 #include <vector>
 #include <iostream>
 #include <fstream>
-
+#include "Kazakevich.h"
 using namespace std;
 
 int main()
 {
+	
 	cout << "Start" << endl;
 	string filename;
 	cout << "Enter filename: ";
@@ -30,8 +30,8 @@ int main()
 		smb = fin.get();
 		first_data.push_back(smb);
 	}
-
-	Kaz::Run(first_data, "Kazakevich_output.txt");
+	Kaz::RunCoder(first_data,"Kazakevich_Code_out1.txt" );
+	Kaz::RunDecoder("Kazakevich_Code_out.txt");
 
 	system("pause");
 	return 0;

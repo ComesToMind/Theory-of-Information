@@ -6,6 +6,7 @@ using namespace std;
 namespace Kaz
 {
 
-	void Run(vector<char> text, string filename);
+	void RunCoder(vector<char> text, string filename);
+	void RunDecoder(string filename);
 
 }
