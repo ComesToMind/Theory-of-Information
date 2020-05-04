@@ -30,8 +30,8 @@ int main()
 		smb = fin.get();
 		first_data.push_back(smb);
 	}
-	Kaz::Run(first_data,"Kazakevich_output.txt");
-	
+	Kaz::RunCoder(first_data,"Kazakevich_output.txt");
+	Kaz::RunDecoder("Kazakevich_output.txt", "Kazakevich_output_decode.txt");
 
 	return 0;
 }

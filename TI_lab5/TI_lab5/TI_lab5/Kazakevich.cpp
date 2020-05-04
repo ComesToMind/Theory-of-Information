@@ -42,7 +42,7 @@ void Kaz::RunCoder(vector<char> first_data, string filename)
 	//
 	//form codes  **+*+++*++++ ,when " * "-  parity bit is UP
 	//
-	//checking for theoretic errors in process of transfer data
+	//computing parity bits 
 	
 	bool r1 = 0, r2 =0, r3=0, r4=0;
 
@@ -96,7 +96,7 @@ void Kaz::RunDecoder(string filename)
 	ofstream fout("output.txt");
 
 	int counter, place;
-
+	//output symbols 
 	for (auto & var : Codes)
 	{
 		counter = 1;
@@ -104,7 +104,7 @@ void Kaz::RunDecoder(string filename)
 		bitset<8> temp;
 		while (counter <= 12)
 		{
-			if (!(counter && !(counter & (counter - 1)))) // check if the power if 2
+			if (!(counter && !(counter & (counter - 1)))) // check if the power != 2
 			{
 				temp[place] = var[counter - 1];
 				place++;
