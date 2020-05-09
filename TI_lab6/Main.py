@@ -5,16 +5,7 @@ from pathlib import Path
 filename = Path("C:/Users/Данила/source/repos/theory of information/TI_lab6/qr-code.png")
 if not filename.exists():
     print("Oops, file doesn't exist!")
-# The I/O module is used for importing the image
 
-# from skimage import data
-# import numpy as np
-# import matplotlib.pyplot as plt
-# from skimage import io
-# image = io.imread('qr-code.png')
-# print(image)
-# plt.imshow(image, cmap='gray')
-# plt.show()
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
@@ -44,13 +35,3 @@ print(bitarray)
 plt.imshow(img)
 plt.imshow(bitarray)
 plt.show()
-
-
-# import cv2
-# import numpy as np
-# img = cv2.imread('test1.png', 0)
-#
-# thresh_img = cv2.threshold(img,127,255,cv2.THRESH_BINARY)
-#
-# print(thresh_img)
-# print(type(thresh_img))
