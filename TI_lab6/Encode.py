@@ -1,3 +1,15 @@
+# здесь лежат индексы для буквенно-цифрового кодирвоания
+indexes = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
+           'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ' ', '$', '%', '*', '+', '-', '.', '/', ':']
+
+# В таблице 2 указано максимальное количество полезной информации вместе со служебной (в битах),
+# которое можно закодировать в QR коде этой версии.
+# Из этой таблицы определется версия нашего QR кода.
+
+# здесь лежат версии с 1-9 с уровнем сжатия М(15%)
+versies = [128,224,352,512,688,864,992,1232,1456]
+V : int = -1
+# здесь храним посчитанный номер версии
 
 
 def decimals_to_binaries():
@@ -8,13 +20,14 @@ def decimals_to_binaries():
     # то если в конце остаётся 2 символа, полученное двузначное число кодируется 7 битами, а если 1 символ, то 4 битами.
 
     decimals: str = input("Введите последовательность цифр: ")
+    decimals.upper()
     i = 0
     split_by_three_to_bin: str = ""
     for i in range(i, len(decimals), 3):
         split_by_three = decimals[i:i+3:1]
         if len(split_by_three) == 3:
             temp = bin(int(split_by_three))[2:]  # обрезаем у bin() 0b в начале
-            split_by_three_to_bin +=(temp.rjust(10, '0')) # дополняет до 10 бит и кидаем в
+            split_by_three_to_bin += (temp.rjust(10, '0')) # дополняет до 10 бит и кидаем в
             continue
         if len(split_by_three) == 2:
             temp = bin(int(split_by_three))[2:]
@@ -24,7 +37,8 @@ def decimals_to_binaries():
             temp = bin(int(split_by_three))[2:]  # обрезаем у bin() 0b в начале
             split_by_three_to_bin +=(temp.rjust(4, '0'))  # дополняет до 4 бит и кидаем в
             continue
-    return split_by_three_to_bin
+    return add_type_and_length(split_by_three_to_bin, '0010') # добавили служебную информацию
+
 
 def decimalsANDsymbols_to_binaries():
     # В этом случае на 2 символа требуется 11 бит информации.
@@ -35,21 +49,66 @@ def decimalsANDsymbols_to_binaries():
     # Если в последней группе 1 символ,
     # то его значение сразу кодируется 6-битным числом и добавляется к последовательности бит
     inputs: str = input("Введите последовательность букв или цифр: ")
+    inputs = inputs.upper()
     i = 0
     split_by_two_to_bin: str = ""
     for i in range(i, len(inputs), 2):
         split_by_two = inputs[i:i+2:1]
         if len(split_by_two) == 2:
-            temp = bin(int(split_by_two))[2:]
-            split_by_two_to_bin += (temp.rjust(7, '0'))  # дополняет до 7 бит и кидаем в
+            temp_dec = 45*indexes.index(split_by_two[0]) + indexes.index(split_by_two[1])
+            temp = bin(temp_dec)[2:]
+            split_by_two_to_bin += temp.rjust(11, '0')  # дополняет до 11 бит и кидаем в
             continue
         if len(split_by_two) == 1:
-            temp = bin(int(split_by_two))[2:]  # обрезаем у bin() 0b в начале
-            split_by_two_to_bin +=(temp.rjust(4, '0'))  # дополняет до 4 бит и кидаем в
+            temp = bin(indexes.index(split_by_two))[2:]  # обрезаем у bin() 0b в начале
+            split_by_two_to_bin += temp.rjust(6, '0')  # дополняет до 4 бит и кидаем в
             continue
-    return split_by_two_to_bin
+    return add_type_and_length(split_by_two_to_bin, '0010') # добавили служебную информацию
+
+def add_type_and_length(initial_binaries : str, type: str)
+    # длина количества поля данных (initial_binaries)
+    # цифровое 10 бит
+    # буквенно-циф 9 бит
+
+    # в будущем проверить на слишком большое кол-во байт
+    dec = len(initial_binaries)
+    if str == '0010':
+        dec_str = (bin(dec)[2:0]).rjust(9,'0')
+        return "0010" + dec_str + initial_binaries
+    if str == '0001':
+        dec_str = (bin(dec)[2:0]).rjust(10, '0')
+        return "0001" + dec_str + initial_binaries
 
 
-print(decimals_to_binaries())
-# print("000111101101110010001001110") 12345678
+def fill_to_certain_length(for_fill: str):
+    addit_byte1 = "11101100"
+    addit_byte2 = "00010001"
+    # делаем последовательность кратной 8
+    while for_fill % 8 != 0:
+        for_fill += '0'
+    V = -1
+    # ищим подходящую версию по длине бит
+    i = 0
+    for i in range(0,9):
+        if (versies[i]-len(for_fill)) >= 0:
+            V = i
+            break
+    i = 0
+    # ПОТОМ ПРОВЕРИТЬ НА -1
+    while len(for_fill) != versies[V]:
+        if i % 2 == 0:
+            for_fill += addit_byte1;
+            i +=1
+            continue
+        for_fill +=addit_byte2
+        i +=1
+
+
+
+for_fill: str = decimalsANDsymbols_to_binaries()
+ready_data: str = fill_to_certain_length(for_fill)
+# print(decimalsANDsymbols_to_binaries())
+
+# print(decimals_to_binaries())
+# print("0110000101101111000110011000")
 
