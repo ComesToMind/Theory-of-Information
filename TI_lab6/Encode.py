@@ -1,5 +1,9 @@
 import numpy as np
-
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+from PIL import Image
+import copy
 # здесь лежат индексы для буквенно-цифрового кодирвоания
 indexes = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
            'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ' ', '$', '%', '*', '+', '-', '.', '/', ':']
@@ -16,7 +20,6 @@ V: int = -1
 # здесь количество байтов коррекции для версии
 AMOUNT_OF_CORRECTION_BYTES = [10, 16, 26, 18, 24, 16, 18, 22, 22]
 # Генерирующие многочлены
-
 GENERATING_POLYNOMS = [[251, 67, 46, 61, 118, 70, 64, 94, 32, 45],
                        [120, 104, 107, 109, 102, 161, 76, 3, 91, 191, 147, 169, 182, 194, 225, 120],
                        [173, 125, 158, 2, 103, 182, 118, 17, 145, 201, 111, 28, 165, 53, 161, 21, 245, 142, 13, 102,48 ,227 , 153, 145, 218, 70],
@@ -47,21 +50,37 @@ GALOIS_FIELD = [ 1, 2, 4, 8, 16, 32, 64, 128, 29, 58, 116, 232, 205, 135, 19, 38
 
 # Обратное поле Галуа
 REV_GALOIS_FIELD = [ -1, 0, 1, 25, 2, 50, 26, 198, 3, 223, 51, 238, 27, 104, 199, 75,
-					 4, 100, 224, 14, 52, 141, 239, 129, 28, 193, 105, 248, 200, 8, 76, 113,
+                     4, 100, 224, 14, 52, 141, 239, 129, 28, 193, 105, 248, 200, 8, 76, 113,
                      5, 138, 101, 47, 225, 36, 15, 33, 53, 147, 142, 218, 240, 18, 130, 69,
-									29, 181, 194, 125, 106, 39, 249, 185, 201, 154, 9, 120, 77, 228, 114, 166,
-									6, 191, 139, 98, 102, 221, 48, 253, 226, 152, 37, 179, 16, 145, 34, 136,
-									54, 208, 148, 206, 143, 150, 219, 189, 241, 210, 19, 92, 131, 56, 70, 64,
-									30, 66, 182, 163, 195, 72, 126, 110, 107, 58, 40, 84, 250, 133, 186, 61,
-									202, 94, 155, 159, 10, 21, 121, 43, 78, 212, 229, 172, 115, 243, 167, 87,
-									7, 112, 192, 247, 140, 128, 99, 13, 103, 74, 222, 237, 49, 197, 254, 24,
-									227, 165, 153, 119, 38, 184, 180, 124, 17, 68, 146, 217, 35, 32, 137, 46,
-									55, 63, 209, 91, 149, 188, 207, 205, 144, 135, 151, 178, 220, 252, 190, 97,
-									242, 86, 211, 171, 20, 42, 93, 158, 132, 60, 57, 83, 71, 109, 65, 162,
-									31, 45, 67, 216, 183, 123, 164, 118, 196, 23, 73, 236, 127, 12, 111, 246,
-									108, 161, 59, 82, 41, 157, 85, 170, 251, 96, 134, 177, 187, 204, 62, 90,
-									203, 89, 95, 176, 156, 169, 160, 81, 11, 245, 22, 235, 122, 117, 44, 215,
-									79, 174, 213, 233, 230, 231, 173, 232, 116, 214, 244, 234, 168, 80, 88, 175 ]
+                     29, 181, 194, 125, 106, 39, 249, 185, 201, 154, 9, 120, 77, 228, 114, 166,
+                     6, 191, 139, 98, 102, 221, 48, 253, 226, 152, 37, 179, 16, 145, 34, 136,
+                     54, 208, 148, 206, 143, 150, 219, 189, 241, 210, 19, 92, 131, 56, 70, 64,
+                     30, 66, 182, 163, 195, 72, 126, 110, 107, 58, 40, 84, 250, 133, 186, 61,
+                     202, 94, 155, 159, 10, 21, 121, 43, 78, 212, 229, 172, 115, 243, 167, 87,
+                     7, 112, 192, 247, 140, 128, 99, 13, 103, 74, 222, 237, 49, 197, 254, 24,
+                     227, 165, 153, 119, 38, 184, 180, 124, 17, 68, 146, 217, 35, 32, 137, 46,
+                     55, 63, 209, 91, 149, 188, 207, 205, 144, 135, 151, 178, 220, 252, 190, 97,
+                     242, 86, 211, 171, 20, 42, 93, 158, 132, 60, 57, 83, 71, 109, 65, 162,
+                     31, 45, 67, 216, 183, 123, 164, 118, 196, 23, 73, 236, 127, 12, 111, 246,
+                     108, 161, 59, 82, 41, 157, 85, 170, 251, 96, 134, 177, 187, 204, 62, 90,
+                     203, 89, 95, 176, 156, 169, 160, 81, 11, 245, 22, 235, 122, 117, 44, 215,
+                     79, 174, 213, 233, 230, 231, 173, 232, 116, 214, 244, 234, 168, 80, 88, 175 ]
+
+
+SEARCH_ELEMENT = [[0,0,0,0,0,0,0],
+                           [0,1,1,1,1,1,0],
+                           [0,1,0,0,0,1,0],
+                           [0,1,0,0,0,1,0],
+                           [0,1,0,0,0,1,0],
+                           [0,1,1,1,1,1,0],
+                           [0,0,0,0,0,0,0]]
+ALIGNMENT_PATTERN_LOC = [[18],[22],[26],[30],[34],[6,22,38],[6,24,42],[6,26,46]]
+
+ONE_ALIGNMENT = [[0,0,0,0,0],
+                 [0,1,1,1,0],
+                 [0,1,0,1,0],
+                 [0,1,1,1,0],
+                 [0,0,0,0,0]]
 
 def decimals_to_binaries():
     # Этот тип кодирования требует 10 бит на 3 символа.
@@ -194,19 +213,19 @@ def forming_blocks(whole_data: str):
     return blocks
 
 
-def create_correcting_bytes(blocks):
+def create_correcting_bytes(blocks_):
     # создаем в зависимости от уровня корекции кол-во байт
     # заполняем их данными из блока а затем нулями
     # чекаем,что больше
     # arr = np.zeros(AMOUNT_OF_CORRECTION_BYTES[V], dtype=int)
-    for i in range(0, len(blocks)):
-        len_blocks = len(blocks[i])
-        while len(blocks[i]) < AMOUNT_OF_CORRECTION_BYTES[V]:
-            blocks[i].append(0)
+    for i in range(0, len(blocks_)):
+        len_blocks = len(blocks_[i])
+        while len(blocks_[i]) < AMOUNT_OF_CORRECTION_BYTES[V]:
+            blocks_[i].append(0)
         for j in range(0, len_blocks):
-            temp_A = blocks[i][0]
-            blocks[i].pop(0)
-            blocks[i].append(0)
+            temp_A = blocks_[i][0]
+            blocks_[i].pop(0)
+            blocks_[i].append(0)
             if temp_A == 0:
                 continue
             temp_B = REV_GALOIS_FIELD[temp_A]
@@ -214,19 +233,132 @@ def create_correcting_bytes(blocks):
             for k in GENERATING_POLYNOMS[V]:
                 temp_D = (temp_B + k) % 255
                 temp_D = GALOIS_FIELD[temp_D]
-                blocks[i][place] ^= temp_D
+                blocks_[i][place] ^= temp_D
                 place += 1
-    return blocks
+    return blocks_
+
+def merge_blocks():
+    return
+
+# for_fill: str = decimalsANDsymbols_to_binaries()
+# ready_to_form_blocks: str = fill_to_certain_length(for_fill)
+#
+# blocks = forming_blocks(ready_to_form_blocks)
+# blocks_of_correct = create_correcting_bytes(blocks)
+
+def draw_search_pattern(pixels):
+    # 3 поисковых узора
+    for i in range(len(SEARCH_ELEMENT)):
+        for j in range(len(SEARCH_ELEMENT)):
+            pixels[i, j] = SEARCH_ELEMENT[i][j]  # левый верхний
+            pixels[i, img.size[0] - 7 + j] = SEARCH_ELEMENT[i][j]  # левый нижний
+            pixels[img.size[0] - 7 + i, j] = SEARCH_ELEMENT[i][j]  # правый верхний
+    return pixels
 
 
-for_fill: str = decimalsANDsymbols_to_binaries()
-ready_to_form_blocks: str = fill_to_certain_length(for_fill)
+def draw_synchr_strip(pixels):
+    # здесь полосы синхронизации (черно-бел черед)
+    i = 9
+    for i in range(i, img.size[0]-8):
+        if i % 2 == 0:
+            pixels[6, i] = 1
+            pixels[i,6] = 1
+            continue
+        pixels[6,i] = 0
+        pixels[i,6] = 0
+    return pixels
 
-blocks = forming_blocks(ready_to_form_blocks)
-blocks_of_correct = list(blocks) # СОВСЕМ НЕ РАБОТАЕТ
-print(blocks)
-print(create_correcting_bytes(blocks_of_correct))
-print(blocks)
+
+def draw_alignment_patterns(pixels):
+
+    # Есть одно важное условие: выравнивающие узоры не должны наслаиваться на поисковые узоры.
+    # То есть, когда версия больше 6, в точках (первая, первая),
+    # (первая, последняя) и (последняя, первая) выравнивающих узоров не должно быть
+    global V
+    if V == 0:
+        return
+    coordinates  = []
+    if V < 6:
+        temp = []
+        temp.append(ALIGNMENT_PATTERN_LOC[V-1][0])
+        temp.append(ALIGNMENT_PATTERN_LOC[V-1][0])
+        coordinates.append(temp)
+        # вызвать функцию рисования
+        return draw_one_alignment(pixels,coordinates)
+
+
+    patterns = ALIGNMENT_PATTERN_LOC[V-1]
+    temp = []
+    temp2 = []
+    temp3 = []
+    temp.append(patterns[0])
+    temp.append(patterns[1])
+    coordinates.append(temp) # первый второй
+    coordinates.append(temp[::-1]) # второй первый
+    temp2.append(patterns[1])
+    temp2.append(patterns[1])
+    coordinates.append(temp2) # второй второй
+    temp4 = []
+    temp4.append(patterns[1])
+    temp4.append(patterns[2])# вторйо третий
+    coordinates.append(temp4)
+    coordinates.append(temp4[::-1]) # третий второй
+    temp3.append(patterns[2])
+    temp3.append(patterns[2])
+    coordinates.append(temp3)
+    return draw_one_alignment(pixels,coordinates)
+
+def draw_one_alignment(pixels, coordinates):
+    # рисуем каждый выравнивающий узор
+    for k in coordinates:
+        i = k[0]-2
+        j = k[1]-2
+        m = 0
+        for i in range(i, k[0]+3):
+            n = 0
+            for j in range(j,k[1]+3):
+                pixels[i,j] = ONE_ALIGNMENT[m][n]
+                n+=1
+            m +=1
+            j = k[1] - 2
+    return pixels
+
+#### ЗДЕСЬ ВЕСЬ НАЧАЛОСЬ (и порешалось)
+
+# for_fill: str = decimalsANDsymbols_to_binaries()
+# ready_to_form_blocks: str = fill_to_certain_length(for_fill)
+#
+# blocks = forming_blocks(ready_to_form_blocks)
+# print(blocks)
+#
+# blocks_of_correct = copy.deepcopy(blocks)
+# create_correcting_bytes(blocks_of_correct)
+# print(blocks_of_correct)
+# print(blocks)
+
+V = 5
+if V == 0:
+    img = Image.new('1', (21, 21), color='white')
+else:
+    # максимальное число в выравнивающем узоре есть размер, к которому + 7 надо
+    max = ALIGNMENT_PATTERN_LOC[V-1][len(ALIGNMENT_PATTERN_LOC[V-1])-1] + 7
+    img = Image.new('1', (max, max), color='white')
+
+pixels = img.load()
+
+draw_search_pattern(pixels)
+draw_synchr_strip(pixels)
+draw_alignment_patterns(pixels)
+
+
+
+
+plt.imshow(np.asarray(img), cmap='gray')
+plt.show()
+
+
+
+#img.show()
 
 # print(decimalsANDsymbols_to_binaries())
 # print(decimals_to_binaries())
