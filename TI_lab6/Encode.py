@@ -221,11 +221,11 @@ def create_correcting_bytes(blocks_):
     # заполняем их данными из блока а затем нулями
     # чекаем,что больше
     # arr = np.zeros(AMOUNT_OF_CORRECTION_BYTES[V], dtype=int)
-    for i in range(0, len(blocks_)):
+    for i in range(0, len(blocks_)): # продимся для каждого блока данных
         len_blocks = len(blocks_[i])
-        while len(blocks_[i]) < AMOUNT_OF_CORRECTION_BYTES[V]:
+        while len(blocks_[i]) < AMOUNT_OF_CORRECTION_BYTES[V]: # тут если блок данных меньше коррект то 0 добавим
             blocks_[i].append(0)
-        for j in range(0, len_blocks):
+        for j in range(0, len_blocks): # до прибавления нулей мы уже засекли кол-во байт данных в len_blocks
             temp_A = blocks_[i][0]
             blocks_[i].pop(0)
             blocks_[i].append(0)
@@ -236,13 +236,12 @@ def create_correcting_bytes(blocks_):
             for k in GENERATING_POLYNOMS[V]:
                 temp_D = (temp_B + k) % 255
                 temp_D = GALOIS_FIELD[temp_D]
-                blocks_[i][place] ^= temp_D
+                blocks_[i][place] ^= temp_D # делаем xor элементов одного индекса с полиномом и массивом данных
                 place += 1
-    for k in range(len(blocks_)):
+    for k in range(len(blocks_)): # если у нас байт данных больше, чем размер коррект, то обрезаем нули с конца в коррект блоке (надо ли)
         while len(blocks_[k]) > AMOUNT_OF_CORRECTION_BYTES[V]:
             blocks_[k].pop()
     return blocks_
-
 
 def merge_blocks(blocks, blocks_of_correct):
     # из каждого блока данных по очереди берётся один байт информации,
@@ -261,6 +260,7 @@ def merge_blocks(blocks, blocks_of_correct):
                 break
             if len(blocks[i]) != 0:
                 merged.append(blocks[i].pop(0))
+    # теперь после данных добавляем байты
     flag = True
     while flag:
         for i in range(len(blocks_of_correct)):
@@ -283,15 +283,15 @@ def draw_search_pattern(pixels):
     for i in range(len(SEARCH_ELEMENT)-1):
         for j in range(len(SEARCH_ELEMENT)-1):
             pixels[i][ j] = SEARCH_ELEMENT[i+1][j+1]  # левый верхний +-1 -это белая полоса
-            pixels[i][ img.size[0] - 8 + j] = SEARCH_ELEMENT[i+1][j]  # левый нижний
-            pixels[img.size[0] - 8 + i][ j] = SEARCH_ELEMENT[i][j+1]  # правый верхний
+            pixels[i][ len(pixels) - 8 + j] = SEARCH_ELEMENT[i+1][j]  # левый нижний
+            pixels[len(pixels) - 8 + i][ j] = SEARCH_ELEMENT[i][j+1]  # правый верхний
     return pixels
 
 
 def draw_timing_strip(pixels):
     # здесь полосы синхронизации (черно-бел черед)
     i = 8
-    for i in range(i, img.size[0]-8):
+    for i in range(i, len(pixels)-8):
         if i % 2 != 0:
             pixels[6][ i] = 1
             pixels[i][6] = 1
@@ -402,7 +402,7 @@ def draw_code_mask_and_correct_level(pixels):
 
 
     pixels[len(pixels)-8][8] = 0 # ставим черный статичный модуль
-    j = len(pixels)-7
+    j = len(pixels)-8
     while j < len(pixels):
         if pixels[8][j] ==-1:
             pixels[8][j] = int(code[place])^1
@@ -421,6 +421,8 @@ def draw_data(pixels, data):
     for k in data:
         str_bits += (bin(k)[2:]).rjust(8, '0')
 
+
+    #print(np.count_nonzero(pixels ==-1))
     # выведем пока на просто на экран
     i = size - 1
     j = size - 1
@@ -429,7 +431,7 @@ def draw_data(pixels, data):
     up_forw_module = True
     while j > 0: # идём по столбацам справа на лево и отнимаем 2 - типо один модуль
         if up_forw_module:
-            for i in range(size-1,0,-1):
+            for i in range(size-1,-1,-1):
                 if pixels[i][j]==-1: #правый
                     pixels[i][j] = (int(str_bits[place]) ^ 1) if is_mask_true(i,j) else int(str_bits[place])
                     # pixels[i][j] = (int(str_bits[place])&is_mask_true(i,j)) ^ 1
@@ -439,7 +441,7 @@ def draw_data(pixels, data):
                     place += 1
             up_forw_module = False # следующий модуль вниз идёт
         else:
-            for i in range(0,size-1,1):
+            for i in range(0,size,1):
                 if pixels[i][j]==-1: #правый
                     pixels[i][j] = (int(str_bits[place])^1) if is_mask_true(i,j) else int(str_bits[place])
                     place +=1
@@ -448,8 +450,10 @@ def draw_data(pixels, data):
                     place += 1
             up_forw_module = True # следующий модуль вверх идёт
         j -=2
-        if j == -6: # левая полоса синхронизации
+        if j == 6: # левая полоса синхронизации
             j -=1
+    print(np.count_nonzero(pixels ==-1))
+
     return pixels
 #### ЗДЕСЬ ВЕСЬ НАЧАЛОСЬ
 
@@ -457,18 +461,16 @@ for_fill: str = decimalsANDsymbols_to_binaries()
 ready_to_form_blocks: str = fill_to_certain_length(for_fill)
 
 blocks = forming_blocks(ready_to_form_blocks)
-
-####### не забыть обрезать лишние байты в конце!!! СДелал, но надо ли было ?
 blocks_of_correct = copy.deepcopy(blocks)
 create_correcting_bytes(blocks_of_correct)
 data = merge_blocks(blocks, blocks_of_correct)
 if V == 0:
-    img = Image.new('1', (21, 21), color='white')
+    img = Image.new('1', (21+8, 21+8), color='white')
     pixels = np.full((21,21),-1)
 else:
     # максимальное число в выравнивающем узоре есть размер, к которому + 7 надо
     max = ALIGNMENT_PATTERN_LOC[V-1][len(ALIGNMENT_PATTERN_LOC[V-1])-1] + 7
-    img = Image.new('1', (max, max), color='white')
+    img = Image.new('1', (max+8, max+8), color='white')
     pixels = np.full((max, max), -1)
 
 img_pixels = img.load()
@@ -483,10 +485,10 @@ draw_code_mask_and_correct_level(pixels)
 draw_data(pixels,data)
 
 # переводим nd.array  в пиксели
-for i in range(img.size[0]):
-    for j in range(img.size[0]):
+for i in range(img.size[0]-8):
+    for j in range(img.size[0]-8):
         if(pixels[i][j] != -1):
-            img_pixels[j, i] = int(pixels[i][j])
+            img_pixels[j+4, i+4] = int(pixels[i][j])
 
 
 
@@ -497,7 +499,5 @@ plt.show()
 # img.save("qr_2ver_colo.jpeg", "JPEG")
 #img.show()
 
-# print(decimalsANDsymbols_to_binaries())
-# print(decimals_to_binaries())
-# print("0110000101101111000110011000")
+
 
