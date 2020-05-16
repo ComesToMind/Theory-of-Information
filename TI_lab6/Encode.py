@@ -111,7 +111,7 @@ def decimals_to_binaries():
             temp = bin(int(split_by_three))[2:]  # обрезаем у bin() 0b в начале
             split_by_three_to_bin +=(temp.rjust(4, '0'))  # дополняет до 4 бит и кидаем в
             continue
-    return add_type_and_length(split_by_three_to_bin, '0001') # добавили служебную информацию
+    return add_type_and_length(split_by_three_to_bin, '0001',len(decimals)) # добавили служебную информацию
 
 
 def decimalsANDsymbols_to_binaries():
@@ -137,22 +137,20 @@ def decimalsANDsymbols_to_binaries():
             temp = bin(indexes.index(split_by_two))[2:]  # обрезаем у bin() 0b в начале
             split_by_two_to_bin += temp.rjust(6, '0')  # дополняет до 4 бит и кидаем в
             continue
-    return add_type_and_length(split_by_two_to_bin, '0010') # добавили служебную информацию
+    return add_type_and_length(split_by_two_to_bin, '0010', len(inputs)) # добавили служебную информацию
 
 
-def add_type_and_length(initial_binaries : str, t : str):
+def add_type_and_length(initial_binaries : str, t : str, dec):
 
-    # длина количества поля данных (initial_binaries)
     # цифровое 10 бит
     # буквенно-циф 9 бит
 
     # в будущем проверить на слишком большое кол-во байт
-    dec = len(initial_binaries)
     if t == '0010':
-        dec_str = (bin(dec)[2:0]).rjust(9,'0')
+        dec_str = (bin(int(dec))[2:]).rjust(9, '0')
         return "0010" + dec_str + initial_binaries
     if t == '0001':
-        dec_str = (bin(dec)[2:0]).rjust(10, '0')
+        dec_str = (bin(int(dec))[2:]).rjust(10, '0')
         return "0001" + dec_str + initial_binaries
 
 
@@ -161,6 +159,7 @@ def fill_to_certain_length(for_fill: str):
     addit_byte1 = "11101100"
     addit_byte2 = "00010001"
     # делаем последовательность кратной 8
+    # стоит ли добавлять 0000? или кратность 8 само решит
     while len(for_fill) % 8 != 0:
         for_fill += '0'
     global V
@@ -376,25 +375,23 @@ def draw_code_version(pixels):
 
 
 def draw_code_mask_and_correct_level(pixels):
-    #code = "101010000010010" # нулевая маска и уровень корекции М 15%
-    code = "111111111111111"
+    code = "101010000010010" # нулевая маска и уровень корекции М 15%
+    #code = "111111111111111"
     # заполняем вокруг левого верхнего
     # 0-7 биты
     place = 0
-    j  = 0
-    while j < 8:
+    for j in range(0,8):
         if pixels[8][j] ==-1:
-            pixels[8][j] = int(code[place])^1
+            pixels[8][j] = int(code[place]) ^ 1
             place +=1
-        j +=1
-    #8 -14
-    i = 7
+
+    i = 8
+
     while i >=0:
         if pixels[i][8] ==-1:
             pixels[i][8] = int(code[place])^1
             place +=1
         i -=1
-
     place = 0
     j = len(pixels)-1
     while j > len(pixels)-8:
@@ -402,7 +399,10 @@ def draw_code_mask_and_correct_level(pixels):
             pixels[j][8] = int(code[place])^1
             place +=1
         j -=1
-    j = len(pixels)-8
+
+
+    pixels[len(pixels)-8][8] = 0 # ставим черный статичный модуль
+    j = len(pixels)-7
     while j < len(pixels):
         if pixels[8][j] ==-1:
             pixels[8][j] = int(code[place])^1
@@ -458,7 +458,7 @@ ready_to_form_blocks: str = fill_to_certain_length(for_fill)
 
 blocks = forming_blocks(ready_to_form_blocks)
 
-# не забыть обрезать лишние байты в конце!!! СДелал, но надо ли было ?
+####### не забыть обрезать лишние байты в конце!!! СДелал, но надо ли было ?
 blocks_of_correct = copy.deepcopy(blocks)
 create_correcting_bytes(blocks_of_correct)
 data = merge_blocks(blocks, blocks_of_correct)
@@ -480,13 +480,13 @@ draw_alignment_patterns(pixels)
 draw_timing_strip(pixels)
 draw_code_version(pixels)
 draw_code_mask_and_correct_level(pixels)
-# draw_data(pixels,data)
+draw_data(pixels,data)
 
 # переводим nd.array  в пиксели
 for i in range(img.size[0]):
     for j in range(img.size[0]):
         if(pixels[i][j] != -1):
-            img_pixels[i, j] = int(pixels[i][j])
+            img_pixels[j, i] = int(pixels[i][j])
 
 
 
