@@ -158,10 +158,7 @@ def fill_to_certain_length(for_fill: str):
     # заполнение до длины равной ближайщей версии
     addit_byte1 = "11101100"
     addit_byte2 = "00010001"
-    # делаем последовательность кратной 8
-    # стоит ли добавлять 0000? или кратность 8 само решит
-    while len(for_fill) % 8 != 0:
-        for_fill += '0'
+
     global V
     V = -1
     # ищим подходящую версию по длине бит
@@ -171,6 +168,19 @@ def fill_to_certain_length(for_fill: str):
         if (VERSIES[i] - len(for_fill)) >= 0:
             V = i
             break
+    # делаем последовательность кратной 8
+    # стоит ли добавлять 0000? или кратность 8 само решит НАДОООО
+    # добавляем терминатор
+    for i in range(0,4):
+        if len(for_fill)!=VERSIES[V]:
+            for_fill += '0'
+        else:
+            return for_fill
+
+
+    while len(for_fill) % 8 != 0:
+        for_fill += '0'
+
     i = 0
     # ПОТОМ ПРОВЕРИТЬ НА -1
     while len(for_fill) != VERSIES[V]:
@@ -422,7 +432,7 @@ def draw_data(pixels, data):
         str_bits += (bin(k)[2:]).rjust(8, '0')
 
 
-    #print(np.count_nonzero(pixels ==-1))
+    print(np.count_nonzero(pixels ==-1))
     # выведем пока на просто на экран
     i = size - 1
     j = size - 1
@@ -434,7 +444,6 @@ def draw_data(pixels, data):
             for i in range(size-1,-1,-1):
                 if pixels[i][j]==-1: #правый
                     pixels[i][j] = (int(str_bits[place]) ^ 1) if is_mask_true(i,j) else int(str_bits[place])
-                    # pixels[i][j] = (int(str_bits[place])&is_mask_true(i,j)) ^ 1
                     place +=1
                 if pixels[i][j-1] == -1: #левый
                     pixels[i][j-1] = (int(str_bits[place]) ^ 1) if is_mask_true(i,j-1) else int(str_bits[place])
@@ -452,12 +461,12 @@ def draw_data(pixels, data):
         j -=2
         if j == 6: # левая полоса синхронизации
             j -=1
-    print(np.count_nonzero(pixels ==-1))
 
     return pixels
 #### ЗДЕСЬ ВЕСЬ НАЧАЛОСЬ
 
 for_fill: str = decimalsANDsymbols_to_binaries()
+# for_fill: str = decimals_to_binaries()
 ready_to_form_blocks: str = fill_to_certain_length(for_fill)
 
 blocks = forming_blocks(ready_to_form_blocks)
@@ -491,12 +500,12 @@ for i in range(img.size[0]-8):
             img_pixels[j+4, i+4] = int(pixels[i][j])
 
 
-
+print(V+1) # выводим версию
 plt.imshow(np.asarray(img), cmap='gray') #
 plt.show()
 
 
-# img.save("qr_2ver_colo.jpeg", "JPEG")
+img.save("./qr_"+str(V+1)+".bmp", "BMP")
 #img.show()
 
 
