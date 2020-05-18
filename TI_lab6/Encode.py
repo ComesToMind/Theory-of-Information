@@ -1,4 +1,4 @@
-import numpy as np
+import re
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
@@ -86,14 +86,14 @@ ONE_ALIGNMENT = [[0,0,0,0,0],
                  [0,0,0,0,0]]
 
 CODE_VERSIONS = ["000010011110100110", "010001011100111000", "110111011000000100"] # код версий 7,8,9
-def decimals_to_binaries():
+def decimals_to_binaries(decimals: str):
     # Этот тип кодирования требует 10 бит на 3 символа.
     # Вся последовательность символов разбивается на группы по 3 цифры,
     # и каждая группа (трёхзначное число) переводится в 10-битное двоичное число и добавляется к последовательности бит.
     # Если общее количество символов не кратно 3,
     # то если в конце остаётся 2 символа, полученное двузначное число кодируется 7 битами, а если 1 символ, то 4 битами.
 
-    decimals: str = input("Введите последовательность цифр: ")
+
     decimals.upper()
     i = 0
     split_by_three_to_bin: str = ""
@@ -114,7 +114,7 @@ def decimals_to_binaries():
     return add_type_and_length(split_by_three_to_bin, '0001',len(decimals)) # добавили служебную информацию
 
 
-def decimalsANDsymbols_to_binaries():
+def decimalsANDsymbols_to_binaries(inputs: str):
     # В этом случае на 2 символа требуется 11 бит информации.
     # Входной поток символов разделяется на группы по 2,
     # в группе каждый символ кодируется согласно таблице внизу,
@@ -122,22 +122,26 @@ def decimalsANDsymbols_to_binaries():
     # Полученное число переводится в 11-битное двоичное число и добавляется к последовательности бит.
     # Если в последней группе 1 символ,
     # то его значение сразу кодируется 6-битным числом и добавляется к последовательности бит
-    inputs: str = input("Введите последовательность букв или цифр: ")
     inputs = inputs.upper()
     i = 0
     split_by_two_to_bin: str = ""
-    for i in range(i, len(inputs), 2):
-        split_by_two = inputs[i:i+2:1]
-        if len(split_by_two) == 2:
-            temp_dec = 45*indexes.index(split_by_two[0]) + indexes.index(split_by_two[1])
-            temp = bin(temp_dec)[2:]
-            split_by_two_to_bin += temp.rjust(11, '0')  # дополняет до 11 бит и кидаем в
-            continue
-        if len(split_by_two) == 1:
-            temp = bin(indexes.index(split_by_two))[2:]  # обрезаем у bin() 0b в начале
-            split_by_two_to_bin += temp.rjust(6, '0')  # дополняет до 4 бит и кидаем в
-            continue
-    return add_type_and_length(split_by_two_to_bin, '0010', len(inputs)) # добавили служебную информацию
+    try:
+        for i in range(i, len(inputs), 2):
+            split_by_two = inputs[i:i+2:1]
+            if len(split_by_two) == 2:
+                temp_dec = 45*indexes.index(split_by_two[0]) + indexes.index(split_by_two[1])
+                temp = bin(temp_dec)[2:]
+                split_by_two_to_bin += temp.rjust(11, '0')  # дополняет до 11 бит и кидаем в
+                continue
+            if len(split_by_two) == 1:
+                temp = bin(indexes.index(split_by_two))[2:]  # обрезаем у bin() 0b в начале
+                split_by_two_to_bin += temp.rjust(6, '0')  # дополняет до 4 бит и кидаем в
+                continue
+    except ValueError as e:
+        print("Введен симол, не принадлежащий ни к одному типу кодирования!")
+        return "",False
+
+    return add_type_and_length(split_by_two_to_bin, '0010', len(inputs)),True # добавили служебную информацию
 
 
 def add_type_and_length(initial_binaries : str, t : str, dec):
@@ -282,11 +286,6 @@ def merge_blocks(blocks, blocks_of_correct):
 
     return merged
 
-# for_fill: str = decimalsANDsymbols_to_binaries()
-# ready_to_form_blocks: str = fill_to_certain_length(for_fill)
-#
-# blocks = forming_blocks(ready_to_form_blocks)
-# blocks_of_correct = create_correcting_bytes(blocks)
 
 def draw_search_pattern(pixels):
     # 3 поисковых узора
@@ -328,7 +327,7 @@ def draw_alignment_patterns(pixels):
         # вызвать функцию рисования
         return draw_one_alignment(pixels,coordinates)
 
-
+    # здесь статикой с 7ой версии фармируются вырав узоры, можно сделать потом красивее
     patterns = ALIGNMENT_PATTERN_LOC[V-1]
     temp = []
     temp2 = []
@@ -409,8 +408,6 @@ def draw_code_mask_and_correct_level(pixels):
             pixels[j][8] = int(code[place])^1
             place +=1
         j -=1
-
-
     pixels[len(pixels)-8][8] = 0 # ставим черный статичный модуль
     j = len(pixels)-8
     while j < len(pixels):
@@ -432,41 +429,59 @@ def draw_data(pixels, data):
         str_bits += (bin(k)[2:]).rjust(8, '0')
 
 
-    print(np.count_nonzero(pixels ==-1))
-    # выведем пока на просто на экран
+    # print(np.count_nonzero(pixels ==-1))
     i = size - 1
     j = size - 1
     place = 0
-    # четные модули - снизу вверх, нечет - наоборот
-    up_forw_module = True
-    while j > 0: # идём по столбацам справа на лево и отнимаем 2 - типо один модуль
-        if up_forw_module:
-            for i in range(size-1,-1,-1):
-                if pixels[i][j]==-1: #правый
-                    pixels[i][j] = (int(str_bits[place]) ^ 1) if is_mask_true(i,j) else int(str_bits[place])
-                    place +=1
-                if pixels[i][j-1] == -1: #левый
-                    pixels[i][j-1] = (int(str_bits[place]) ^ 1) if is_mask_true(i,j-1) else int(str_bits[place])
-                    place += 1
-            up_forw_module = False # следующий модуль вниз идёт
-        else:
-            for i in range(0,size,1):
-                if pixels[i][j]==-1: #правый
-                    pixels[i][j] = (int(str_bits[place])^1) if is_mask_true(i,j) else int(str_bits[place])
-                    place +=1
-                if pixels[i][j-1] == -1: #левый
-                    pixels[i][j-1] = (int(str_bits[place])^1) if is_mask_true(i,j-1) else int(str_bits[place])
-                    place += 1
-            up_forw_module = True # следующий модуль вверх идёт
-        j -=2
-        if j == 6: # левая полоса синхронизации
-            j -=1
+    try:
+        up_forw_module = True
+        while j > 0: # идём по столбацам справа на лево и отнимаем 2 - типо один модуль
+            if up_forw_module:
+                for i in range(size-1,-1,-1):
+                    if pixels[i][j]==-1: #правый
+                        pixels[i][j] = (int(str_bits[place]) ^ 1) if is_mask_true(i,j) else int(str_bits[place])
+                        place +=1
+                    if pixels[i][j-1] == -1: #левый
+                        pixels[i][j-1] = (int(str_bits[place]) ^ 1) if is_mask_true(i,j-1) else int(str_bits[place])
+                        place += 1
+                up_forw_module = False # следующий модуль вниз идёт
+            else:
+                for i in range(0,size,1):
+                    if pixels[i][j]==-1: #правый
+                        pixels[i][j] = (int(str_bits[place])^1) if is_mask_true(i,j) else int(str_bits[place])
+                        place +=1
+                    if pixels[i][j-1] == -1: #левый
+                        pixels[i][j-1] = (int(str_bits[place])^1) if is_mask_true(i,j-1) else int(str_bits[place])
+                        place += 1
+                up_forw_module = True # следующий модуль вверх идёт
+            j -=2
+            if j == 6: # левая полоса синхронизации
+                j -= 1
+        return pixels
+    except IndexError as e: # потому что кол-ва бит данных мб меньше свободного места и вылетет прога ( маску не наложил на последок, но и так работает)
+        return pixels
 
     return pixels
+
+
 #### ЗДЕСЬ ВЕСЬ НАЧАЛОСЬ
 
-for_fill: str = decimalsANDsymbols_to_binaries()
-# for_fill: str = decimals_to_binaries()
+print("Можно закодировать: \n 1. Последовательность из цифр от 0 до 9 (цифровое) \n 2. Последовательность букв латинского алфавита, цифор, символов $%*+-./: и пробела (буквенно-цифровое)"  )
+print("Программа сама определит способ кодирования! \n")
+flag = False
+
+while flag != True:
+    inputs = input("Введите данные: ")
+    if inputs == "":
+        continue
+    if re.fullmatch('[0-9]*', inputs) and inputs:
+        for_fill = decimals_to_binaries(inputs)
+        flag = True
+    else:
+        for_fill, flag = decimalsANDsymbols_to_binaries(inputs)
+
+
+
 ready_to_form_blocks: str = fill_to_certain_length(for_fill)
 
 blocks = forming_blocks(ready_to_form_blocks)
@@ -500,12 +515,13 @@ for i in range(img.size[0]-8):
             img_pixels[j+4, i+4] = int(pixels[i][j])
 
 
-print(V+1) # выводим версию
+print("Версия ", V+1) # выводим версию
 plt.imshow(np.asarray(img), cmap='gray') #
+plt.axis('off')
 plt.show()
 
 
-img.save("./qr_"+str(V+1)+".bmp", "BMP")
+# img.save("./qr_"+str(V+1)+".bmp", "BMP")
 #img.show()
 
 
