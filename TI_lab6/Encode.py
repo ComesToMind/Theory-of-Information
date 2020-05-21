@@ -172,6 +172,10 @@ def fill_to_certain_length(for_fill: str):
         if (VERSIES[i] - len(for_fill)) >= 0:
             V = i
             break
+    if V == -1:
+        print("Введенная последовательность не вмешается в максимальную 9ую версию")
+        return for_fill, False
+
     # делаем последовательность кратной 8
     # стоит ли добавлять 0000? или кратность 8 само решит НАДОООО
     # добавляем терминатор
@@ -179,7 +183,7 @@ def fill_to_certain_length(for_fill: str):
         if len(for_fill)!=VERSIES[V]:
             for_fill += '0'
         else:
-            return for_fill
+            return for_fill,True
 
 
     while len(for_fill) % 8 != 0:
@@ -194,7 +198,7 @@ def fill_to_certain_length(for_fill: str):
             continue
         for_fill += addit_byte2
         i += 1
-    return for_fill
+    return for_fill, True
 
 
 def forming_blocks(whole_data: str):
@@ -476,13 +480,13 @@ while flag != True:
         continue
     if re.fullmatch('[0-9]*', inputs) and inputs:
         for_fill = decimals_to_binaries(inputs)
-        flag = True
+        ready_to_form_blocks , flag = fill_to_certain_length(for_fill)
     else:
         for_fill, flag = decimalsANDsymbols_to_binaries(inputs)
+        if flag:
+            ready_to_form_blocks, flag = fill_to_certain_length(for_fill)
 
 
-
-ready_to_form_blocks: str = fill_to_certain_length(for_fill)
 
 blocks = forming_blocks(ready_to_form_blocks)
 blocks_of_correct = copy.deepcopy(blocks)
